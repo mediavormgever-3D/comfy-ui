@@ -1,0 +1,42 @@
+name: Manifest controleren
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 5 * * 1"     # elke maandag: zijn alle downloadlinks nog geldig?
+
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Manifest (structuur, profielen, conflicten)
+        run: python installer/comfypack.py validate
+      - name: Overzicht
+        run: python installer/comfypack.py list
+      - name: Links en repo's bereikbaar
+        if: github.event_name != 'pull_request'
+        run: python installer/comfypack.py validate --online
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          CIVITAI_TOKEN: ${{ secrets.CIVITAI_TOKEN }}
+
+  powershell:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PowerShell-syntax (5.1)
+        shell: powershell
+        run: |
+          $bad = 0
+          foreach ($f in Get-ChildItem -Recurse -Filter *.ps1) {
+            $errs = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile($f.FullName, [ref]$null, [ref]$errs)
+            if ($errs) { $errs | Format-List | Out-String | Write-Host; $bad++ } else { Write-Host "ok  $($f.Name)" }
+          }
+          exit $bad

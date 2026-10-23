@@ -1,0 +1,23 @@
+# Eigen LoRA's van de vakgroep (en uitgekozen LoRA's van internet).
+#
+# Toevoegen gaat het makkelijkst met één commando (vult naam, grootte en
+# sha256 automatisch in):
+#
+#   python installer/comfypack.py add-model <URL> --pack eigen-loras --dir loras
+#
+# Waar zet je je eigen .safetensors neer?
+#   * GitHub Release van deze repo (max. 2 GB per bestand, gratis, publiek):
+#       gh release create loras-v1 mijn_stijl.safetensors
+#     URL: https://github.com/<org>/<repo>/releases/download/loras-v1/mijn_stijl.safetensors
+#   * Hugging Face (ook privé, met token in secrets.toml)
+#   * Civitai (token in secrets.toml): https://civitai.com/api/download/models/<versie-id>
+#
+# Submappen mogen: dir = "loras/vakgroep" houdt het overzichtelijk in ComfyUI.
+description = "Eigen en geselecteerde LoRA's"
+requires = ["sdxl"]
+
+# Voorbeeld (haal het hekje weg en vul in):
+# [[models]]
+# dir = "loras/vakgroep"
+# url = "https://github.com/JOUW-ORG/comfyui-pack/releases/download/loras-v1/vakgroep_stijl_v1.safetensors"
+# sha256 = "…"

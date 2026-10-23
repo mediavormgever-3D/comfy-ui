@@ -1,0 +1,42 @@
+name: Rooktest Windows-installatie
+
+# Echte installatie op een schone Windows-runner (CPU-torch, zonder grote modellen),
+# daarna ComfyUI opstarten en controleren dat alle custom nodes laden.
+on:
+  workflow_dispatch:
+    inputs:
+      profiel:
+        description: Profiel
+        default: standaard
+  push:
+    paths:
+      - install.ps1
+      - installer/**
+      - comfy-pack.toml
+      - packs/**
+
+jobs:
+  install:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Installeren (zoals op een PC, vanuit deze checkout)
+        shell: powershell
+        run: .\install.ps1 -Profiel "${{ inputs.profiel || 'standaard' }}" -InstallDir C:\cp-test -SkipModels -TorchIndex cpu -NoShortcut
+      - name: Tweede run moet niets meer doen (idempotent)
+        shell: powershell
+        run: .\install.ps1 -Profiel "${{ inputs.profiel || 'standaard' }}" -InstallDir C:\cp-test -SkipModels -TorchIndex cpu -NoShortcut
+      - name: ComfyUI start en laadt alle nodes
+        shell: powershell
+        working-directory: C:\cp-test\ComfyUI
+        run: |
+          $out = & ..\venv\Scripts\python.exe -s main.py --cpu --quick-test-for-ci 2>&1 | Out-String
+          Write-Host $out
+          if ($out -match 'IMPORT FAILED|Cannot import') { throw 'Een of meer custom nodes laden niet' }
+      - name: Log bewaren
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: install-log
+          path: C:\cp-test\.comfypack\logs\

@@ -1,0 +1,62 @@
+# =============================================================================
+#  comfy-pack.toml — globale instellingen voor het ComfyUI-installatiepakket
+# =============================================================================
+#  Wat er per pakket (nodes, modellen, LoRA's, workflows) in zit staat in
+#  packs/*.toml. Hier staan versies, profielen en het gedrag van de installer.
+#
+#  Na elke wijziging:  python installer/comfypack.py validate
+#  (gebeurt ook automatisch in GitHub Actions bij elke push / pull request)
+# =============================================================================
+
+[comfyui]
+repo = "https://github.com/Comfy-Org/ComfyUI"
+# Altijd een release-tag of commit pinnen: dan draait elke PC exact hetzelfde.
+# Nieuwe versie testen? Pas aan, push naar een testbranch, installeer met -Branch.
+ref = "v0.39.0"
+
+[python]
+version = "3.13"            # beheerd door uv, los van een eventuele systeem-Python
+# Extra pins die custom nodes niet mogen overschrijven (pip/uv constraints-syntax).
+constraints = []
+
+[torch]
+# Gepind voor de hele fleet. torchaudio wordt sinds torch 2.12 niet meer
+# uitgebracht en ComfyUI heeft hem niet nodig.
+packages = ["torch==2.14.1", "torchvision==0.29.1"]
+# auto  = NVIDIA-driver/GPU detecteren: cu130 (driver >= 580, RTX 20xx en nieuwer),
+#         cu126 voor GTX 10xx en ouder, cpu zonder NVIDIA-kaart
+# vaste keuze: "cu130" | "cu132" | "cu126" | "cpu" | "pypi" | een volledige index-URL
+index = "auto"
+
+[install]
+parallel_downloads = 3
+# ComfyUI-Manager-pakket installeren (nodig voor start-comfyui-beheer.bat).
+manager = true
+# Custom nodes die NIET in de gekozen packs staan verplaatsen naar
+# custom_nodes/.disabled — houdt alle PC's identiek. Uit = laten staan.
+prune_unlisted_nodes = false
+# Lokale bron voor modellen: eerst hier zoeken, pas daarna internet.
+# Map/share:  mirror = '\\server\comfy-mirror'   of  'D:\comfy-mirror'
+# HTTP:       mirror = "http://10.0.0.5:8080"
+# Vullen met: python installer/comfypack.py mirror --dest <pad> --all
+# Kan per PC/run overschreven worden met -Mirror (install.ps1) of --mirror.
+mirror = ""
+
+[launch]
+# Instellingen voor start-comfyui.bat (de snelkoppeling voor studenten).
+listen = "127.0.0.1"         # "0.0.0.0" = bereikbaar vanaf andere PC's
+port = 8188
+auto_launch = true           # browser automatisch openen
+manager_ui = false           # Manager-knop tonen voor studenten
+# Optioneel: eigen mappen. Omgevingsvariabelen werken (%USERNAME% / $HOME).
+# output_directory = 'D:\ComfyUI-output'
+args = ["--preview-method", "auto"]
+
+# -----------------------------------------------------------------------------
+#  Profielen = een set packs. Kies er één bij installatie (-Profiel naam).
+#  Packs mogen zelf ook 'requires' hebben; die worden automatisch meegenomen.
+# -----------------------------------------------------------------------------
+[profiles]
+minimaal  = ["basis"]
+standaard = ["basis", "sdxl"]
+volledig  = ["basis", "sdxl", "z-image", "eigen-loras"]

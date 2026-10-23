@@ -1,0 +1,21 @@
+# SDXL 1.0 + Lightning: snelle beelden in 4 stappen, draait op 8 GB VRAM.
+description = "SDXL 1.0 base met Lightning 4-staps LoRA en kant-en-klare workflow"
+requires = ["basis"]
+
+[[models]]
+dir = "checkpoints"
+url = "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors"
+sha256 = "31e35c80fc4829d14f90153f4c74cd59c90b779f6afe05a74cd6120b893f7e5b"
+
+[[models]]
+dir = "loras"
+url = "https://huggingface.co/ByteDance/SDXL-Lightning/resolve/main/sdxl_lightning_4step_lora.safetensors"
+
+# -----------------------------------------------------------------------------
+#  Bestanden uit deze repo kopiëren naar de ComfyUI-map.
+#  dest is relatief t.o.v. ComfyUI/. Workflows in user/default/workflows
+#  verschijnen in de workflow-zijbalk van ComfyUI.
+# -----------------------------------------------------------------------------
+[[files]]
+src = "workflows/sdxl-lightning-4stap.json"
+dest = "user/default/workflows/Vakgroep/SDXL Lightning 4 stappen.json"

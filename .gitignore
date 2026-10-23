@@ -1,0 +1,6 @@
+# Tokens nooit committen
+secrets.toml
+# Lokale test-installaties en downloads
+*.part
+__pycache__/
+/test-install/

@@ -1,0 +1,73 @@
+# ComfyUI uitrollen / bijwerken op de Windows-PC's van de vakgroep.
+#
+#   ansible-playbook -i inventory.ini ansible/comfyui.yml
+#   ansible-playbook -i inventory.ini ansible/comfyui.yml -e comfypack_profile=volledig -l pc-3d-01
+#   ansible-playbook -i inventory.ini ansible/comfyui.yml -e comfypack_force=true   # ook als ComfyUI open staat
+#
+# Tip: vul eerst de mirror (één keer, op de Linux-controller):
+#   python3 installer/comfypack.py mirror --dest /srv/comfy-mirror --all
+#   python3 -m http.server 8080 -d /srv/comfy-mirror        # of nginx
+# en zet comfypack_mirror op "http://<controller-ip>:8080". Een HTTP-mirror omzeilt
+# het WinRM 'double hop'-probleem dat je met een SMB-share (\\server\share) wél hebt.
+- name: ComfyUI-pakket
+  hosts: vakgroep3d
+  gather_facts: false
+  serial: 7                 # 7 PC's tegelijk: spaart internetlijn en mirror
+  vars:
+    comfypack_repo: "https://github.com/JOUW-ORG/comfyui-pack.git"
+    comfypack_branch: main
+    comfypack_profile: standaard
+    comfypack_root: 'C:\ComfyUI'
+    comfypack_mirror: ""
+    comfypack_force: false
+    comfypack_skip_models: false
+    # Tokens (optioneel) in een vault: ansible-vault create group_vars/vakgroep3d/vault.yml
+    comfypack_hf_token: "{{ vault_hf_token | default('') }}"
+    comfypack_civitai_token: "{{ vault_civitai_token | default('') }}"
+    _raw: "{{ comfypack_repo | regex_replace('^https://github.com/', 'https://raw.githubusercontent.com/') | regex_replace('\\.git$', '') }}"
+  tasks:
+    - name: Installatiemap
+      ansible.windows.win_file:
+        path: "{{ comfypack_root }}"
+        state: directory
+
+    - name: Tokens (alleen als ingevuld)
+      ansible.windows.win_copy:
+        dest: '{{ comfypack_root }}\secrets.toml'
+        content: |
+          huggingface = "{{ comfypack_hf_token }}"
+          civitai = "{{ comfypack_civitai_token }}"
+      no_log: true
+      when: comfypack_hf_token | length > 0 or comfypack_civitai_token | length > 0
+
+    - name: Installer ophalen
+      ansible.windows.win_get_url:
+        url: "{{ _raw }}/{{ comfypack_branch }}/install.ps1"
+        dest: '{{ comfypack_root }}\install.ps1'
+        force: true
+
+    - name: Installeren / bijwerken (eerste keer kan lang duren)
+      ansible.windows.win_command: >-
+        powershell.exe -NoProfile -ExecutionPolicy Bypass -File "{{ comfypack_root }}\install.ps1"
+        -InstallDir "{{ comfypack_root }}" -Profiel "{{ comfypack_profile }}"
+        -Repo "{{ comfypack_repo }}" -Branch "{{ comfypack_branch }}"
+        {% if comfypack_mirror %}-Mirror "{{ comfypack_mirror }}"{% endif %}
+        {% if comfypack_force | bool %}-Force{% endif %}
+        {% if comfypack_skip_models | bool %}-SkipModels{% endif %}
+      async: 21600          # max 6 uur
+      poll: 60
+      register: comfypack_run
+      failed_when: comfypack_run.rc not in [0, 1]
+      changed_when: true
+
+    - name: Resultaat lezen
+      ansible.windows.win_shell: Get-Content -Raw '{{ comfypack_root }}\.comfypack\state.json'
+      register: comfypack_state
+      changed_when: false
+
+    - name: Samenvatting
+      vars:
+        st: "{{ comfypack_state.stdout | from_json }}"
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }}: {{ 'OK' if st.ok else 'FOUTEN' }} | profiel {{ st.profile }} | ComfyUI {{ st.comfyui.ref }} | pack {{ (st.pack_commit or 'lokaal')[:8] }} | {{ st.errors | join(' / ') }}"
+      failed_when: not st.ok

@@ -1,0 +1,66 @@
+# Basis: handige nodes, upscalers en snelle preview-decoders.
+# Wordt door elk profiel gebruikt.
+description = "Essentiële nodes, upscalers en hoge-kwaliteit previews"
+
+# -----------------------------------------------------------------------------
+#  Custom nodes — altijd op commit of tag pinnen.
+#  repo  : git-URL
+#  ref   : tag, commit (40 tekens) of branch (branch = niet reproduceerbaar!)
+#  optioneel: name = "mapnaam", requirements = false, install_script = false,
+#             pip = ["extra-pakket==1.2"]
+# -----------------------------------------------------------------------------
+[[nodes]]
+repo = "https://github.com/rgthree/rgthree-comfy"
+ref = "d7297b42f0fa78bec1c0411478f887423c249502"
+
+[[nodes]]
+repo = "https://github.com/kijai/ComfyUI-KJNodes"
+ref = "37a6c45a07bb06cc392431ddbbc741e691c467f4"
+
+[[nodes]]
+repo = "https://github.com/pythongosssss/ComfyUI-Custom-Scripts"
+ref = "609f3afaa74b2f88ef9ce8d939626065e3247469"
+
+# -----------------------------------------------------------------------------
+#  Modellen
+#  dir    : submap onder ComfyUI/models (checkpoints, loras, vae, upscale_models…)
+#  file   : bestandsnaam (standaard: laatste deel van de URL)
+#  sha256 : controle na download (aanrader; bij Hugging Face wordt de hash van
+#           de server gebruikt als je hem weglaat)
+# -----------------------------------------------------------------------------
+[[models]]
+dir = "upscale_models"
+url = "https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth"
+sha256 = "4fa0d38905f75ac06eb49a7951b426670021be3018265fd191d2125df9d682f1"
+size = 67040989
+
+[[models]]
+dir = "upscale_models"
+url = "https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.2.4/RealESRGAN_x4plus_anime_6B.pth"
+sha256 = "f872d837d3c90ed2e05227bed711af5671a6fd1c9f7d7e91c911a61f155e99da"
+size = 17938799
+
+# TAESD-decoders: live preview tijdens het genereren (--preview-method auto).
+[[models]]
+dir = "vae_approx"
+url = "https://github.com/madebyollin/taesd/raw/fdbae2df989db95761f482efb8977e1182fb68d2/taesd_decoder.pth"
+sha256 = "02873377c3f4659cd9f9adb2f718dcb434ba4c7bba3af3ee7bb95cbdabe2d3cf"
+size = 4913399
+
+[[models]]
+dir = "vae_approx"
+url = "https://github.com/madebyollin/taesd/raw/fdbae2df989db95761f482efb8977e1182fb68d2/taesdxl_decoder.pth"
+sha256 = "a3956b8a7a763f251c7357aad6375dacdb6d971121c73e97a3069fc33a94fe1e"
+size = 4913541
+
+[[models]]
+dir = "vae_approx"
+url = "https://github.com/madebyollin/taesd/raw/fdbae2df989db95761f482efb8977e1182fb68d2/taesd3_decoder.pth"
+sha256 = "178fbb90c8c3bab4fe5e30dcba3b85d8bd2c9a203f71239c3a3223720c310b58"
+size = 4940671
+
+[[models]]
+dir = "vae_approx"
+url = "https://github.com/madebyollin/taesd/raw/fdbae2df989db95761f482efb8977e1182fb68d2/taef1_decoder.pth"
+sha256 = "beae86f2eeaf0cea884dc8ffe639fb297dac8c984441bb53420f07d767785104"
+size = 4943336
