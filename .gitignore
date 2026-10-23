@@ -4,3 +4,6 @@ secrets.toml
 *.part
 __pycache__/
 /test-install/
+# Ansible: eigen inventory en kluis horen niet in de repo
+inventory.ini
+group_vars/

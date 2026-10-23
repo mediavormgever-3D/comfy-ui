@@ -14,7 +14,7 @@
   gather_facts: false
   serial: 7                 # 7 PC's tegelijk: spaart internetlijn en mirror
   vars:
-    comfypack_repo: "https://github.com/JOUW-ORG/comfyui-pack.git"
+    comfypack_repo: "https://github.com/mediavormgever-3D/comfy-ui.git"
     comfypack_branch: main
     comfypack_profile: standaard
     comfypack_root: 'C:\ComfyUI'

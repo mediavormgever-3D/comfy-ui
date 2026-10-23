@@ -15,6 +15,12 @@ Normaal aangeroepen door install.ps1, maar ook los te gebruiken:
 """
 from __future__ import annotations
 
+import sys
+
+if sys.version_info < (3, 11):
+    sys.exit("comfypack heeft Python 3.11 of nieuwer nodig (nu %d.%d). "
+             "Tip: uv run --python 3.13 installer/comfypack.py ..." % sys.version_info[:2])
+
 import argparse
 import dataclasses
 import datetime as dt
@@ -25,7 +31,6 @@ import os
 import re
 import shutil
 import subprocess
-import sys
 import tempfile
 import threading
 import time
@@ -179,6 +184,18 @@ def safe_rel(p: str, what: str) -> str:
     return p
 
 
+def normalize_url(url: str) -> str:
+    """Webpagina-links die mensen vaak kopiëren omzetten naar de directe download."""
+    u = url.strip()
+    parts = urllib.parse.urlsplit(u)
+    host = (parts.hostname or "").lower()
+    if host.endswith("huggingface.co") and "/blob/" in parts.path:
+        u = u.replace("/blob/", "/resolve/", 1)
+    elif host == "github.com" and "/blob/" in parts.path:
+        u = u.replace("/blob/", "/raw/", 1)
+    return u
+
+
 def url_filename(url: str) -> str:
     name = urllib.parse.unquote(urllib.parse.urlsplit(url).path.rsplit("/", 1)[-1])
     return name
@@ -273,9 +290,12 @@ class Manifest:
                 for req in ("url", "dir"):
                     if req not in m:
                         raise ConfigError(f"{where}: '{req}' ontbreekt")
-                url = m["url"]
+                url = normalize_url(m["url"])
                 if not url.startswith(("https://", "http://")):
                     raise ConfigError(f"{where}: url moet met https:// beginnen")
+                if re.search(r"civitai\.com/models/", url):
+                    raise ConfigError(f"{where}: dit is een Civitai-webpagina. Gebruik de downloadlink: "
+                                      f"rechtsklik op 'Download' > 'Link kopiëren' (https://civitai.com/api/download/models/…)")
                 mdir = safe_rel(m["dir"], where)
                 if mdir.split("/")[0] not in KNOWN_MODEL_DIRS:
                     self.warnings.append(f"{where}: map '{mdir}' is geen standaard ComfyUI-modelmap (ok voor custom nodes)")
@@ -511,10 +531,13 @@ class HashCache:
 
     def save(self) -> None:
         with self.lock:
-            self.path.parent.mkdir(parents=True, exist_ok=True)
-            tmp = self.path.with_suffix(".tmp")
-            tmp.write_text(json.dumps(self.data, indent=1), "utf-8")
-            os.replace(tmp, self.path)
+            try:
+                self.path.parent.mkdir(parents=True, exist_ok=True)
+                tmp = self.path.with_suffix(".tmp")
+                tmp.write_text(json.dumps(self.data, indent=1), "utf-8")
+                os.replace(tmp, self.path)
+            except OSError:
+                pass  # bv. verify zonder adminrechten: de cache is alleen een versnelling
 
 
 class Downloader:
@@ -563,6 +586,11 @@ class Downloader:
                     token = token_for(src, self.secrets) if kind == "bron" else None
                     log(f"{m.rel}: downloaden van {'mirror' if kind == 'mirror' else urllib.parse.urlsplit(src).hostname}")
                     server_sha, actual = http_download(src, part, token, m.file)
+                with open(part, "rb") as fh:
+                    head = fh.read(512).lstrip().lower()
+                if head.startswith((b"<!doctype", b"<html")) and Path(m.file).suffix.lower() in MODEL_EXTS:
+                    part.unlink(missing_ok=True)
+                    raise StepError("de link gaf een webpagina in plaats van een bestand — gebruik de directe downloadlink")
                 if actual is None:
                     actual = sha256_file(part)
                 expected = m.sha256 or server_sha
@@ -1333,10 +1361,11 @@ def civitai_info(url: str, token: str | None) -> Probe | None:
 def cmd_add_model(a) -> int:
     man = Manifest(REPO_DIR)
     secrets = load_secrets(None)
-    url = a.url.strip()
-    if "huggingface.co" in url and "/blob/" in url:
-        url = url.replace("/blob/", "/resolve/", 1)
-        log("Hugging Face 'blob'-link omgezet naar 'resolve'-link")
+    url = normalize_url(a.url)
+    if url != a.url.strip():
+        log("webpagina-link omgezet naar directe downloadlink")
+    if re.search(r"civitai\.com/models/", url):
+        raise ConfigError("dit is een Civitai-webpagina; gebruik de downloadlink (rechtsklik op 'Download' > 'Link kopiëren')")
     token = token_for(url, secrets)
     info = civitai_info(url, token) or probe(url, token)
     if not info.ok:

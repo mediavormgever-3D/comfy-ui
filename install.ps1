@@ -10,10 +10,10 @@
       * startscripts, snelkoppeling op het (openbare) bureaublad, schrijfrechten voor studenten
 
     Een regel, PowerShell als administrator:
-        irm https://raw.githubusercontent.com/JOUW-ORG/comfyui-pack/main/install.ps1 | iex
+        irm https://raw.githubusercontent.com/mediavormgever-3D/comfy-ui/main/install.ps1 | iex
 
     Met opties:
-        & ([scriptblock]::Create((irm https://raw.githubusercontent.com/JOUW-ORG/comfyui-pack/main/install.ps1))) -Profiel volledig
+        & ([scriptblock]::Create((irm https://raw.githubusercontent.com/mediavormgever-3D/comfy-ui/main/install.ps1))) -Profiel volledig
 
     Vanuit een lokale kopie (test je wijzigingen voor je pusht):
         .\install.ps1 -Profiel standaard
@@ -41,7 +41,7 @@
 param(
     [string]$Profiel    = $(if ($env:COMFYPACK_PROFILE) { $env:COMFYPACK_PROFILE } else { 'standaard' }),
     [string]$InstallDir = $(if ($env:COMFYPACK_ROOT)    { $env:COMFYPACK_ROOT }    else { 'C:\ComfyUI' }),
-    [string]$Repo       = $(if ($env:COMFYPACK_REPO)    { $env:COMFYPACK_REPO }    else { 'https://github.com/JOUW-ORG/comfyui-pack.git' }),
+    [string]$Repo       = $(if ($env:COMFYPACK_REPO)    { $env:COMFYPACK_REPO }    else { 'https://github.com/mediavormgever-3D/comfy-ui.git' }),
     [string]$Branch     = $(if ($env:COMFYPACK_BRANCH)  { $env:COMFYPACK_BRANCH }  else { 'main' }),
     [string]$Source,
     [string]$Mirror,
@@ -158,7 +158,7 @@ function Invoke-ComfyPack {
         $packDir = $PSScriptRoot
         Say "pack-bron: $packDir (deze map)" 'step'
     } else {
-        if ($Repo -match 'JOUW-ORG') { throw 'Zet eerst je eigen repo-URL in install.ps1 ($Repo) of geef -Repo op.' }
+        if ($Repo -match 'mediavormgever-3D') { throw 'Zet eerst je eigen repo-URL in install.ps1 ($Repo) of geef -Repo op.' }
         $packDir = Join-Path $InstallDir 'pack'
         Say "pack-bron: $Repo ($Branch)" 'step'
         if (Test-Path (Join-Path $packDir '.git')) {
@@ -207,10 +207,14 @@ function Invoke-ComfyPack {
         if (Test-Path -LiteralPath $icoSrc) { Copy-Item -LiteralPath $icoSrc -Destination $ico -Force }
 
         if ($isAdmin -and -not $NoAcl) {
-            # Gebruikers (SID S-1-5-32-545, taalonafhankelijk) mogen schrijven in ComfyUI\
-            # (output, input, user, models); venv en Python blijven alleen-lezen.
+            # Mappen in C:\ erven standaard 'Wijzigen' voor alle ingelogde gebruikers. Daarom:
+            # overerving uit, beheerders/SYSTEM volledig, Gebruikers alleen lezen (venv, Python, tools) ...
+            # SID's zijn taalonafhankelijk: S-1-5-32-544 Administrators, S-1-5-18 SYSTEM, S-1-5-32-545 Users
+            Invoke-Native 'icacls.exe' @($InstallDir, '/inheritance:r', '/grant:r',
+                '*S-1-5-32-544:(OI)(CI)F', '*S-1-5-18:(OI)(CI)F', '*S-1-5-32-545:(OI)(CI)RX', '/C', '/Q') | Out-Null
+            # ... en alleen in ComfyUI\ mogen Gebruikers schrijven (output, input, user, models).
             Invoke-Native 'icacls.exe' @((Join-Path $InstallDir 'ComfyUI'), '/grant', '*S-1-5-32-545:(OI)(CI)M', '/C', '/Q') | Out-Null
-            Say 'schrijfrechten voor Gebruikers op ComfyUI\' 'ok'
+            Say 'rechten: Gebruikers schrijven alleen in ComfyUI\, de rest is alleen-lezen' 'ok'
         }
         if (-not $NoShortcut) {
             $targets = @()

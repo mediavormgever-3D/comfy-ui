@@ -19,5 +19,5 @@ requires = ["sdxl"]
 # Voorbeeld (haal het hekje weg en vul in):
 # [[models]]
 # dir = "loras/vakgroep"
-# url = "https://github.com/JOUW-ORG/comfyui-pack/releases/download/loras-v1/vakgroep_stijl_v1.safetensors"
+# url = "https://github.com/mediavormgever-3D/comfy-ui/releases/download/loras-v1/vakgroep_stijl_v1.safetensors"
 # sha256 = "…"

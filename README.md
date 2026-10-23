@@ -4,27 +4,18 @@ Eén GitHub-repo die vastlegt **welke** ComfyUI-versie, custom nodes, modellen, 
 
 ```powershell
 # PowerShell als administrator, op een kale Windows-PC:
-irm https://raw.githubusercontent.com/JOUW-ORG/comfyui-pack/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/mediavormgever-3D/comfy-ui/main/install.ps1 | iex
 ```
 
 Er hoeft vooraf niets geïnstalleerd te zijn: geen Python, geen git. Daarna staat er een snelkoppeling **ComfyUI** op het bureaublad van alle gebruikers.
 
 ---
 
-## 1. Eenmalig: repo op GitHub zetten
+## 1. Repo
 
-| Stap | Wat |
-|---|---|
-| 1 | Maak een (publieke) repo, bv. `vakgroep3d/comfyui-pack`, en push deze map erin |
-| 2 | Vervang `JOUW-ORG/comfyui-pack` in `install.ps1` (parameter `$Repo`), `ansible/comfyui.yml` en deze README |
-| 3 | Optioneel: zet `HF_TOKEN` als *Actions secret* (voor de wekelijkse linkcontrole van afgeschermde modellen) |
+Het pakket staat op <https://github.com/mediavormgever-3D/comfy-ui> (publiek). Publiek is prima: de repo bevat alleen *verwijzingen* naar modellen en geen tokens.
 
-```bash
-git init -b main && git add . && git commit -m "ComfyUI-pakket"
-git remote add origin https://github.com/vakgroep3d/comfyui-pack.git && git push -u origin main
-```
-
-Publiek is prima: de repo bevat alleen *verwijzingen* naar modellen en geen tokens. Privé kan ook, maar dan werkt de `irm … | iex`-regel niet zonder token; gebruik dan Ansible of `-Source`.
+Optioneel: zet `HF_TOKEN` als *Actions secret* (Settings → Secrets and variables → Actions) voor de wekelijkse linkcontrole van afgeschermde modellen.
 
 ---
 
@@ -32,8 +23,8 @@ Publiek is prima: de repo bevat alleen *verwijzingen* naar modellen en geen toke
 
 | Situatie | Commando |
 |---|---|
-| Standaard | `irm https://raw.githubusercontent.com/JOUW-ORG/comfyui-pack/main/install.ps1 \| iex` |
-| Ander profiel | `& ([scriptblock]::Create((irm https://raw.githubusercontent.com/JOUW-ORG/comfyui-pack/main/install.ps1))) -Profiel volledig` |
+| Standaard | `irm https://raw.githubusercontent.com/mediavormgever-3D/comfy-ui/main/install.ps1 \| iex` |
+| Ander profiel | `& ([scriptblock]::Create((irm https://raw.githubusercontent.com/mediavormgever-3D/comfy-ui/main/install.ps1))) -Profiel volledig` |
 | Vanuit lokale kopie (wijzigingen testen vóór push) | `.\install.ps1 -Profiel standaard` |
 | Testbranch op één PC | `… -Branch test-comfy-0.40` |
 | Andere schijf | `… -InstallDir D:\ComfyUI` |
@@ -71,7 +62,7 @@ De inhoud staat in **packs** (`packs/*.toml`); een **profiel** in `comfy-pack.to
 # comfy-pack.toml
 [profiles]
 minimaal  = ["basis"]
-standaard = ["basis", "sdxl"]
+standaard = ["basis", "sdxl", "eigen-loras"]
 volledig  = ["basis", "sdxl", "z-image", "eigen-loras"]
 ```
 
@@ -128,9 +119,9 @@ Commit opzoeken: `git ls-remote https://github.com/auteur/ComfyUI-iets HEAD`.
 1. Op één PC: `start-comfyui-beheer.bat`, nodes installeren via de Manager en uitproberen.
 2. Vastleggen (op die PC staat de engine al klaar als `comfypack.bat`):
    ```powershell
-   C:\ComfyUI\comfypack.bat freeze --root C:\ComfyUI > nieuw.toml
+   C:\ComfyUI\comfypack.bat freeze --root C:\ComfyUI --write "$([Environment]::GetFolderPath('Desktop'))\nieuwe-nodes.toml"
    ```
-   Zet `nieuw.toml` in `packs/` van je eigen werkkopie van de repo. Schrijft alle nodes met hun exacte commit (ook Manager/registry-installaties), plus de modellen die nog in geen pack staan (alleen de URL invullen).
+   Kopieer de nieuwe `[[nodes]]`-blokken naar `packs/basis.toml` (op GitHub met het potloodje). Schrijft alle nodes met hun exacte commit (ook Manager/registry-installaties), plus de modellen die nog in geen pack staan (alleen de URL invullen).
 3. Pack aan een profiel toevoegen, `validate`, push → alle PC's krijgen exact hetzelfde.
 
 ### Workflows en andere bestanden meegeven
@@ -216,7 +207,7 @@ Een HTTP-mirror werkt direct vanuit WinRM. Een SMB-share (`\\server\share`) werk
 ### Gedeeld `student`-account
 
 - Snelkoppeling staat op het **openbare** bureaublad en in het startmenu.
-- *Gebruikers* (SID `S-1-5-32-545`, werkt ook op Nederlandstalige Windows) krijgen schrijfrechten op `ComfyUI\` (output, input, workflows, runtime-downloads van nodes). `venv` blijft alleen-lezen, dus studenten kunnen geen pakketten kapotmaken.
+- *Gebruikers* (SID `S-1-5-32-545`, werkt ook op Nederlandstalige Windows) mogen alleen schrijven in `ComfyUI\` (output, input, workflows, runtime-downloads van nodes). De installer zet de standaard-overerving van `C:\` uit, dus `venv`, Python en tools zijn echt alleen-lezen: studenten kunnen geen pakketten kapotmaken. Manager-installaties op een referentie-PC: `start-comfyui-beheer.bat` als administrator starten.
 - Studenten zien standaard geen Manager (`[launch] manager_ui = false`). Beheer gebruikt `start-comfyui-beheer.bat`.
 - Output staat standaard in `C:\ComfyUI\ComfyUI\output` en overleeft dus de profiel-wipe. Liever per student of op de homeshare: `[launch] output_directory = 'H:\ComfyUI-output'` (omgevingsvariabelen zoals `%USERNAME%` werken).
 

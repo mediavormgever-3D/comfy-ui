@@ -58,5 +58,5 @@ args = ["--preview-method", "auto"]
 # -----------------------------------------------------------------------------
 [profiles]
 minimaal  = ["basis"]
-standaard = ["basis", "sdxl"]
+standaard = ["basis", "sdxl", "eigen-loras"]
 volledig  = ["basis", "sdxl", "z-image", "eigen-loras"]
