@@ -9,6 +9,10 @@ irm https://raw.githubusercontent.com/mediavormgever-3D/comfy-ui/main/install.ps
 
 Er hoeft vooraf niets geïnstalleerd te zijn: geen Python, geen git. Daarna staat er een snelkoppeling **ComfyUI** op het bureaublad van alle gebruikers.
 
+- **Handleiding voor docenten en studenten** (stap voor stap): [docs/HANDLEIDING.md](docs/HANDLEIDING.md)
+- **Met Claude**: de Cowork-plugin *comfyui-vakgroep* voegt modellen, LoRA's, workflows en nodes toe via pull requests, controleert versies en lost installatieproblemen op.
+- Wijzigingen gaan altijd via een **pull request**; de PC's krijgen ze na de merge bij hun volgende update.
+
 ---
 
 ## 1. Repo
@@ -24,9 +28,10 @@ Optioneel: zet `HF_TOKEN` als *Actions secret* (Settings → Secrets and variabl
 | Situatie | Commando |
 |---|---|
 | Standaard | `irm https://raw.githubusercontent.com/mediavormgever-3D/comfy-ui/main/install.ps1 \| iex` |
-| Ander profiel | `& ([scriptblock]::Create((irm https://raw.githubusercontent.com/mediavormgever-3D/comfy-ui/main/install.ps1))) -Profiel volledig` |
+| Ander profiel | `$env:COMFYPACK_PROFILE='volledig'; irm https://raw.githubusercontent.com/mediavormgever-3D/comfy-ui/main/install.ps1 \| iex` |
+| Met opties | `& ([scriptblock]::Create((irm https://raw.githubusercontent.com/mediavormgever-3D/comfy-ui/main/install.ps1))) -Profiel volledig -Force` |
 | Vanuit lokale kopie (wijzigingen testen vóór push) | `.\install.ps1 -Profiel standaard` |
-| Testbranch op één PC | `… -Branch test-comfy-0.40` |
+| Testbranch op één PC | `& ([scriptblock]::Create((irm https://raw.githubusercontent.com/mediavormgever-3D/comfy-ui/refs/heads/<branch>/install.ps1))) -Branch <branch>` |
 | Andere schijf | `… -InstallDir D:\ComfyUI` |
 | Alleen nodes/ComfyUI bijwerken | `… -SkipModels` |
 | Ook als ComfyUI nog open staat | `… -Force` |
@@ -221,7 +226,7 @@ Kopieer `secrets.example.toml` naar `C:\ComfyUI\secrets.toml` (per PC, of via he
 
 ## 8. Commando's
 
-`install.ps1` regelt alles op Windows. De engine is los te gebruiken: op een geïnstalleerde PC als `C:\ComfyUI\comfypack.bat <commando>`, of vanuit je werkkopie met elke Python 3.11+ (alleen standaardbibliotheek, ook op Linux):
+`install.ps1` regelt alles op Windows. De engine is los te gebruiken: op een geïnstalleerde PC als `C:\ComfyUI\comfypack.bat <commando>`, of vanuit je werkkopie met Python 3.11+ (op 3.9–3.10 met `pip install tomli`; verder alleen standaardbibliotheek, ook op Linux):
 
 | Commando | Doet |
 |---|---|

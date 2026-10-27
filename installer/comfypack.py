@@ -17,8 +17,8 @@ from __future__ import annotations
 
 import sys
 
-if sys.version_info < (3, 11):
-    sys.exit("comfypack heeft Python 3.11 of nieuwer nodig (nu %d.%d). "
+if sys.version_info < (3, 9):
+    sys.exit("comfypack heeft Python 3.9 of nieuwer nodig (nu %d.%d). "
              "Tip: uv run --python 3.13 installer/comfypack.py ..." % sys.version_info[:2])
 
 import argparse
@@ -34,7 +34,14 @@ import subprocess
 import tempfile
 import threading
 import time
-import tomllib
+try:
+    import tomllib
+except ModuleNotFoundError:  # Python < 3.11
+    try:
+        import tomli as tomllib
+    except ModuleNotFoundError:
+        sys.exit("Python %d.%d mist 'tomllib'. Installeer 'tomli' (python3 -m pip install --user tomli) "
+                 "of gebruik Python 3.11+ (uv run --python 3.13 ...)." % sys.version_info[:2])
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -437,8 +444,11 @@ def probe(url: str, token: str | None) -> Probe:
 
 
 def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
     with open(path, "rb") as f:
-        return hashlib.file_digest(f, "sha256").hexdigest()
+        while chunk := f.read(8 * CHUNK):
+            h.update(chunk)
+    return h.hexdigest()
 
 
 class Progress:
@@ -885,7 +895,7 @@ class Installer:
         have = self.installed_versions(names)
         want_key = self.hash_text(json.dumps(pkgs), idx_url)
         reasons = []
-        for spec, name in zip(pkgs, names, strict=True):
+        for spec, name in zip(pkgs, names):
             v = have.get(name)
             if not v:
                 reasons.append(f"{name} ontbreekt")

@@ -42,7 +42,7 @@
 
     - name: Installer ophalen
       ansible.windows.win_get_url:
-        url: "{{ _raw }}/{{ comfypack_branch }}/install.ps1"
+        url: "{{ _raw }}/refs/heads/{{ comfypack_branch }}/install.ps1"
         dest: '{{ comfypack_root }}\install.ps1'
         force: true
 
