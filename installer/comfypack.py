@@ -1361,8 +1361,8 @@ def civitai_info(url: str, token: str | None) -> Probe | None:
         if not f:
             return None
         sha = (f.get("hashes", {}).get("SHA256") or "").lower() or None
-        size = int(f["sizeKB"] * 1024) if f.get("sizeKB") else None
-        return Probe(True, "civitai", None if sha else size, sha, f.get("name"))
+        # sizeKB is afgerond: niet bruikbaar als exacte grootte
+        return Probe(True, "civitai", None, sha, f.get("name"))
     except Exception as e:
         log(f"Civitai-API niet bereikbaar ({e}); val terug op downloadinfo", "warn")
         return None
@@ -1401,7 +1401,7 @@ def cmd_add_model(a) -> int:
         block.append(f"file = {toml_str(fname)}")
     if sha:
         block.append(f"sha256 = {toml_str(sha)}")
-    if size and not sha:
+    if size:
         block.append(f"size = {size}")
     if not pack.exists():
         pack.write_text(f"description = {toml_str(a.pack)}\n", "utf-8")
