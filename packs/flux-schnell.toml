@@ -1,0 +1,16 @@
+# FLUX.1 schnell (Black Forest Labs, Apache 2.0): 1-4 stappen, goede promptopvolging en tekstweergave.
+# fp8 all-in-one checkpoint (bevat tekst-encoders en VAE), ~17 GB download; prettig vanaf 12 GB VRAM.
+# Bron: Comfy-Org/Flux-1-Schnell (niet afgeschermd). Gebruik: node Load Checkpoint,
+# 4 stappen, cfg 1.0, sampler euler, scheduler simple.
+description = "FLUX.1 schnell fp8 (all-in-one checkpoint)"
+requires = ["basis"]
+
+[[models]]
+dir = "checkpoints"
+url = "https://huggingface.co/Comfy-Org/Flux-1-Schnell/resolve/main/flux1-schnell-fp8.safetensors"
+sha256 = "ead426278b49030e9da5df862994f25ce94ab2ee4df38b556ddddb3db093bf72"
+size = 17236328572
+
+[[files]]
+src = "workflows/flux-schnell-4stap.json"
+dest = "user/default/workflows/Vakgroep/FLUX schnell 4 stappen.json"
