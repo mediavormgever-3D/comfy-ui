@@ -31,9 +31,12 @@ jobs:
         shell: powershell
         working-directory: C:\cp-test\ComfyUI
         run: |
-          $out = & ..\venv\Scripts\python.exe -s main.py --cpu --quick-test-for-ci 2>&1 | Out-String
-          Write-Host $out
-          if ($out -match 'IMPORT FAILED|Cannot import') { throw 'Een of meer custom nodes laden niet' }
+         $ErrorActionPreference = 'Continue'
+$out = (& ..\venv\Scripts\python.exe -s main.py --cpu --quick-test-for-ci 2>&1 | ForEach-Object { "$_" }) -join "`n"
+$code = $LASTEXITCODE
+Write-Host $out
+if ($code -ne 0) { throw "ComfyUI stopte met exitcode $code" }
+if ($out -match 'IMPORT FAILED|Cannot import') { throw 'Een of meer custom nodes laden niet' }
       - name: Log bewaren
         if: always()
         uses: actions/upload-artifact@v4
