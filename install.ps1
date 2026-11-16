@@ -158,7 +158,7 @@ function Invoke-ComfyPack {
         $packDir = $PSScriptRoot
         Say "pack-bron: $packDir (deze map)" 'step'
     } else {
-        if ($Repo -match 'mediavormgever-3D') { throw 'Zet eerst je eigen repo-URL in install.ps1 ($Repo) of geef -Repo op.' }
+        if ($Repo -match 'JOUW-ORG') { throw 'Zet eerst je eigen repo-URL in install.ps1 ($Repo) of geef -Repo op.' }
         $packDir = Join-Path $InstallDir 'pack'
         Say "pack-bron: $Repo ($Branch)" 'step'
         if (Test-Path (Join-Path $packDir '.git')) {
